@@ -57,7 +57,7 @@ class BluetoothOffScreen extends StatelessWidget {
               color: Colors.white54,
             ),
             Text(
-              "Bluetooth Adapter is ${ state != null ? state.toString().substring(15) : 'Not available'}.",
+              "Bluetooth Adapter is ${state != null ? state.toString().substring(15) : 'Not available'}.",
               style: const TextStyle(
                   color: Colors.white54,
                   fontSize: 18,
@@ -80,6 +80,54 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   late BluetoothDevice
       device; // assign this to the scanned device you want to connect
+  FlutterBlue flutterBlue = FlutterBlue.instance;
+  @override
+  void initState() {
+    super.initState();
+    _discoverDevices();
+  }
+  /*
+Future<void> _toggleLED() async {
+    if (device != null) {
+      await device.connect();
+
+      // Discover services and characteristics
+      List<BluetoothService> services = await device!.discoverServices();
+      for (var service in services) {
+        for (var characteristic in service.characteristics) {
+          if (characteristic.uuid == Guid("19B10001-E8F2-537E-4F6C-D104768A1214")) {
+            // Toggle the LED by writing a value
+            characteristic.write([1]); // You may need to adjust this value based on your Arduino code
+          }
+        }
+      }
+
+      await device.disconnect();
+    }
+  }*/
+  Future<void> _discoverDevices() async {
+    // Start scanning for Bluetooth devices
+    flutterBlue.startScan();
+    // Wait for a few seconds (you might want to adjust the duration)
+    await Future.delayed(const Duration(seconds: 5));
+    // Stop scanning
+    flutterBlue.stopScan();
+    // Get a list of discovered devices
+    List<BluetoothDevice> devices = await flutterBlue.connectedDevices;
+    // Assuming you have a reference to a BluetoothDevice (you might get it from the list)
+    if (devices.isNotEmpty) {
+      BluetoothDevice device = devices.first;
+      // Discover services and characteristics
+      List<BluetoothService> services = await device.discoverServices();
+      // Print out services and characteristics
+      for (var service in services) {
+       // print("Service: ${service.uuid}");
+        for (var characteristic in service.characteristics) {
+          //print("Characteristic: ${characteristic.uuid}");
+        }
+      }
+    }
+  }
 
   obtainConnectionDialogeBox() {
     return showDialog(
@@ -172,6 +220,41 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  StreamBuilder<List<BluetoothDevice>>(
+                    stream: Stream.periodic(const Duration(seconds: 2))
+                        .asyncMap((_) => FlutterBlue.instance.connectedDevices),
+                    initialData: const [],
+                    builder: (c, snapshot) => Column(
+                      children: snapshot.data!
+                          .map((d) => Card(
+                                child: ListTile(
+                                  title: Text(d.name),
+                                  subtitle: Text(d.id.toString()),
+                                  trailing: StreamBuilder<BluetoothDeviceState>(
+                                    stream: d.state,
+                                    initialData:
+                                        BluetoothDeviceState.disconnected,
+                                    builder: (c, snapshot) {
+                                      if (snapshot.data ==
+                                          BluetoothDeviceState.connected) {
+                                        return ElevatedButton(
+                                          child: const Text('OPEN'),
+                                          onPressed: () => Navigator.of(context)
+                                              .push(MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      DeviceScreen(device: d))),
+                                        );
+                                      }
+                                      return Text(snapshot.data.toString());
+                                    },
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                  ),
+
+                  //scanned result
                   StreamBuilder<List<ScanResult>>(
                     stream: FlutterBlue.instance.scanResults,
                     initialData: const [],

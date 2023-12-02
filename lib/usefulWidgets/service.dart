@@ -5,6 +5,7 @@ import 'package:xapp/usefulWidgets/characterstics.dart';
 class Service extends StatelessWidget {
   final BluetoothService service;
   final List<Characterstics> characterstics;
+  
   const Service(
       {super.key, required this.service, required this.characterstics});
 

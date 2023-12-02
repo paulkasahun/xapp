@@ -5,6 +5,7 @@ import 'package:flutter_blue/flutter_blue.dart';
 import 'package:xapp/usefulWidgets/characterstics.dart';
 import 'package:xapp/usefulWidgets/descriptor.dart';
 import 'package:xapp/usefulWidgets/service.dart';
+import 'package:xapp/usefulWidgets/toogle.dart';
 
 class DeviceScreen extends StatelessWidget {
   final BluetoothDevice device;
@@ -151,14 +152,22 @@ class DeviceScreen extends StatelessWidget {
               initialData: const [],
               builder: (c, snapshot) {
                 return Column(
-                  children:blueServices(snapshot.data!),
+                  children: blueServices(snapshot.data!),
                 );
               },
             ),
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ToggleLed(),
+                      ));
+                },
+                child: const Text("Blink"))
           ],
         ),
       ),
     );
-
   }
 }
